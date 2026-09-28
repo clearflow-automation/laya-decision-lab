@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10161c">
+  <meta name="description" content="A small, honest experiment in fast model decisions: watch Laya choose each move in Snake, then see what we learned.">
+  <title>Laya Decision Lab · Airlantern</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="#top" aria-label="Laya Decision Lab home"><span class="mark">✳</span> AIRLANTERN <span class="wordmark-muted">/ LAB</span></a>
+    <nav aria-label="Page navigation">
+      <a href="#experiment">The game</a>
+      <a href="#findings">What we learned</a>
+      <a class="nav-external" href="https://airlantern.com/" target="_blank" rel="noopener noreferrer">Visit Airlantern ↗</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div class="eyebrow"><span class="live-dot"></span> AN OPEN DECISION EXPERIMENT <span class="eyebrow-tail">· SEPTEMBER 2026</span></div>
+      <h1>When a model makes<br><em>the next move.</em></h1>
+      <p class="hero-intro">We put the open-source Laya decision model inside Snake to see what it chooses, how fast it chooses, and what the choices actually accomplish. Step through a real local run below.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#experiment">Explore the game <span aria-hidden="true">↘</span></a>
+        <a class="text-link" href="#findings">Read the findings <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="hero-meta"><span>01 / A WORKING PROTOTYPE</span><span>02 / MEASURED LIMITS</span><span>03 / WHAT COMES NEXT</span></div>
+    </section>
+
+    <section id="experiment" class="experiment-section">
+      <div class="wrap">
+        <div class="section-heading"><div><div class="section-kicker">01 — THE EXPERIMENT</div><h2>Watch a decision happen.</h2></div><p>This is a replay of decisions made by a local Laya model. Playback and step controls reveal the recorded moves; the model is not running in your browser.</p></div>
+        <div class="lab-grid">
+          <div class="game-panel">
+            <div class="panel-top"><span class="panel-title"><span class="green-dot"></span> SNAKE / LAYA</span><label for="run-select">Recorded run <select id="run-select" aria-label="Choose recorded run"><option value="19">Run 19</option><option value="42">Run 42</option><option value="7">Run 7</option></select></label></div>
+            <div class="board-frame"><canvas id="board" width="720" height="480" role="img" aria-label="Snake board replay"></canvas><div class="board-overlay" id="board-overlay" aria-live="polite">READY TO REPLAY</div></div>
+            <div class="game-controls"><button id="restart" class="icon-button" type="button" aria-label="Restart replay">↺</button><button id="back" class="icon-button" type="button" aria-label="Previous move">←</button><button id="play" class="play-button" type="button">▶ <span>Play replay</span></button><button id="next" class="icon-button" type="button" aria-label="Next move">→</button><label class="speed-control" for="speed">SPEED <select id="speed"><option value="700">1×</option><option value="350">2×</option><option value="140">5×</option></select></label></div>
+            <input id="timeline" class="timeline" type="range" min="0" max="120" value="0" aria-label="Replay move">
+            <div class="game-caption"><span id="move-count">MOVE 000 / 120</span><span>● FOOD <b id="fruit-count">0</b></span><span id="run-status">RECORDED RUN</span></div>
+          </div>
+          <div class="decision-panel">
+            <div class="decision-header"><span>THE DECISION AT THIS MOVE</span><span id="decision-index">00 / 120</span></div>
+            <div class="question">Which direction should the snake take?</div>
+            <p class="context">The controller supplies four labelled moves. It marks collisions and unsafe routes, and identifies a safe route toward food. Laya scores those options.</p>
+            <div class="options" id="options" aria-live="polite"></div>
+            <div class="decision-result"><span>LAYA PROPOSED</span><strong id="proposed">—</strong><span>MOVE EXECUTED</span><strong id="executed">—</strong></div>
+            <div class="decision-note" id="decision-note">Press play or step forward to inspect a recorded choice.</div>
+            <div class="decision-foot"><span>MODEL INFERENCE FOR THIS MOVE</span><strong id="inference">—</strong></div>
+          </div>
+        </div>
+        <p class="experiment-footnote">Recorded locally with the pretrained Laya checkpoint, compact prompts, and the community Snake controller’s planner hints. The shown run is capped at 120 moves. The displayed probabilities are option scores, not calibrated odds of winning.</p>
+      </div>
+    </section>
+
+    <section id="findings" class="findings wrap">
+      <div class="section-kicker">02 — WHAT WE LEARNED</div><h2>Speed was the easy part.<br><em>Quality needed evidence.</em></h2>
+      <p class="findings-lead">A quick choice is useful only if the model sees the right state, the actions mean what we think they mean, and the choice improves an outcome we care about.</p>
+      <div class="finding-grid">
+        <article class="finding-card"><span class="finding-number">01 / INPUTS</span><h3>The options carry a lot of the intelligence.</h3><p>The Snake controller describes each direction as blocked, unsafe, safe, or a route toward food. Laya chooses among those labelled options. This demonstrates decision routing with structured context; it does not show Laya discovering a winning Snake strategy from raw pixels.</p></article>
+        <article class="finding-card"><span class="finding-number">02 / GAME RESULT</span><h3>A real run, with a visible limit.</h3><p>In the featured 120-move run, the snake ate three fruit and was still alive at the cap. The replay shows every move and score. Survival and fast decisions alone do not establish strong play across games.</p></article>
+        <article class="finding-card"><span class="finding-number">03 / WEIGHT ADAPTATION</span><h3>Changing weights did not improve validation choices.</h3><p>Separate from the game, we adapted Laya’s native scorer in a small, local trading research pilot. Its training loss fell, yet all 124 validation actions were unchanged. That pilot does not establish added decision value from the adaptation.</p></article>
+        <article class="finding-card"><span class="finding-number">04 / BETTER CONTEXT</span><h3>More input was not automatically better.</h3><p>Another small offline pilot added historical setup statistics to the decision context. On its sampled validation dates, selection became worse than the matched version without that evidence. Relevant, causal inputs need to earn their place in a frozen comparison.</p></article>
+      </div>
+    </section>
+
+    <section class="next-section"><div class="wrap next-grid"><div><div class="section-kicker">03 — WHAT COMES NEXT</div><h2>Keep the experiment honest.</h2></div><div class="next-copy"><p><strong>Next:</strong> compare Laya with Jev on the same clearly defined decision tasks once Jev inference access is available. Then continue testing whether a decision layer helps with trading research, using chronological outcomes and baseline comparisons. Early trading pilots have not shown reliable improvement.</p><p class="next-small">This is a research prototype, not a trading system or investment recommendation.</p><a class="text-link" href="https://airlantern.com/" target="_blank" rel="noopener noreferrer">See what we do at Airlantern <span aria-hidden="true">↗</span></a></div></div></section>
+  </main>
+
+  <footer class="site-footer wrap"><div><span class="mark">✳</span> AIRLANTERN / LAB <small>Built to learn in public.</small></div><div class="footer-links"><a href="https://airlantern.com/" target="_blank" rel="noopener noreferrer">Airlantern ↗</a><a href="https://github.com/zzhdbw/laya-Ascend" target="_blank" rel="noopener noreferrer">Community Snake ↗</a><a href="https://github.com/NandhaKishorM/laya" target="_blank" rel="noopener noreferrer">Laya project ↗</a></div><p>Snake controller adapted from the community Laya Snake example; local replay and presentation by Airlantern. Laya and the community example are Apache 2.0 projects. <a href="LICENSE">License</a>.</p></footer>
+
+  <script src="runs.js"></script><script src="game.js"></script>
+</body>
+</html>
